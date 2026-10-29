@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="NAGCAlert - Nagcarlan Disaster Reporting and Monitoring System">
+
+    <title>NAGCAlert | Disaster Reporting System</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- WELCOME PAGE -->
+    <main class="welcome-page" id="welcomePage">
+
+        <!-- Animated Background -->
+        <div class="background-shape shape-one"></div>
+        <div class="background-shape shape-two"></div>
+
+        <!-- Main Content -->
+        <section class="welcome-content">
+
+            <!-- Nagcarlan Logo -->
+            <div class="logo-container">
+                <img
+                    src="assets/nagcarlan-logo.jpg"
+                    alt="Municipality of Nagcarlan Logo"
+                    class="nagcarlan-logo"
+                >
+            </div>
+
+            <!-- System Label -->
+            <p class="welcome-label">
+                DISASTER REPORTING &amp; MONITORING
+            </p>
+
+            <!-- Main Heading -->
+            <h1 class="welcome-title">
+                Welcome to <span>NAGCAlert</span>
+            </h1>
+
+            <!-- Description -->
+            <p class="welcome-description">
+                A community-focused disaster reporting and monitoring
+                system for the Municipality of Nagcarlan, Laguna.
+            </p>
+
+            <!-- Get Started -->
+            <button
+                type="button"
+                class="get-started-btn"
+                id="getStartedBtn"
+            >
+                Get Started
+                <span aria-hidden="true">&rarr;</span>
+            </button>
+
+            <p class="welcome-footer">
+                Prepared Communities. Safer Nagcarlan.
+            </p>
+
+        </section>
+
+        <!-- Bottom Information -->
+        <footer class="welcome-bottom">
+            <p>&copy; 2026 NAGCAlert</p>
+            <p>Nagcarlan, Laguna, Philippines</p>
+        </footer>
+
+    </main>
+
+
+    <!-- DARK OVERLAY -->
+    <div
+        class="auth-overlay"
+        id="authOverlay"
+        aria-hidden="true"
+    ></div>
+
+
+    <!-- SLIDE-IN AUTH PANEL -->
+    <aside
+        class="auth-panel"
+        id="authPanel"
+        aria-hidden="true"
+        aria-label="Admin account access"
+        inert
+    >
+
+        <!-- Panel Header -->
+        <header class="auth-header">
+
+            <div class="auth-brand">
+
+                <div class="auth-brand-icon">N</div>
+
+                <div class="auth-brand-text">
+                    <h2>NAGCAlert</h2>
+                    <p>ADMIN PORTAL</p>
+                </div>
+
+            </div>
+
+            <button
+                type="button"
+                class="auth-close"
+                id="closeAuthBtn"
+                aria-label="Close panel"
+            >
+                &times;
+            </button>
+
+        </header>
+
+
+        <!-- Panel Main Content -->
+        <div class="auth-content">
+
+            <div class="auth-heading-icon" aria-hidden="true">
+                <span>&#9670;</span>
+            </div>
+
+            <p class="auth-eyebrow" id="authEyebrow">
+                WELCOME BACK
+            </p>
+
+            <h2 class="auth-title" id="authTitle">
+                Access your account
+            </h2>
+
+            <p class="auth-description" id="authDescription">
+                Sign in to access the NAGCAlert administration portal.
+            </p>
+
+
+            <!-- LOGIN / SIGN UP TABS -->
+            <div class="auth-tabs" role="tablist" aria-label="Account access">
+
+                <button
+                    type="button"
+                    class="auth-tab active"
+                    id="loginTab"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="loginForm"
+                >
+                    Login
+                </button>
+
+                <button
+                    type="button"
+                    class="auth-tab"
+                    id="signupTab"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="signupForm"
+                >
+                    Sign Up
+                </button>
+
+            </div>
+
+
+            <!-- LOGIN FORM -->
+            <form class="auth-form" id="loginForm">
+
+                <div class="form-group">
+
+                    <label for="loginEmail">
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        name="email"
+                        placeholder="Enter your email address"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <div class="label-row">
+                        <label for="loginPassword">
+                            Password
+                        </label>
+                    </div>
+
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit" class="auth-submit">
+
+                    <span>Login to Dashboard</span>
+
+                    <span class="submit-arrow" aria-hidden="true">
+                        &rarr;
+                    </span>
+
+                </button>
+
+                <p class="form-feedback" id="loginFeedback" role="status"></p>
+
+            </form>
+
+
+            <!-- SIGN UP FORM -->
+            <form class="auth-form" id="signupForm" hidden>
+
+                <div class="form-group">
+
+                    <label for="signupName">
+                        Full Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="signupName"
+                        name="fullName"
+                        placeholder="Enter your full name"
+                        autocomplete="name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="signupEmail">
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="signupEmail"
+                        name="email"
+                        placeholder="Enter your email address"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="signupPassword">
+                        Create Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="signupPassword"
+                        name="password"
+                        placeholder="At least 8 characters"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit" class="auth-submit">
+
+                    <span>Request Admin Account</span>
+
+                    <span class="submit-arrow" aria-hidden="true">
+                        &rarr;
+                    </span>
+
+                </button>
+
+                <p class="signup-notice">
+                    <span aria-hidden="true">&#9432;</span>
+                    Admin account requests require approval.
+                    Submitting this form does not grant admin access.
+                </p>
+
+                <p class="form-feedback" id="signupFeedback" role="status"></p>
+
+            </form>
+
+
+            <!-- Security Information -->
+            <div class="auth-security-note">
+
+                <span class="security-icon" aria-hidden="true">
+                    &#128274;
+                </span>
+
+                <p>
+                    Authorized personnel only.
+                    Account access must be verified.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Panel Footer -->
+        <footer class="auth-panel-footer">
+
+            <span class="status-dot"></span>
+
+            <span>NAGCAlert Disaster Monitoring System</span>
+
+        </footer>
+
+    </aside>
+
+
+    <!-- JavaScript -->
+    <script src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/script.js"></script>
+
+</body>
+</html>
