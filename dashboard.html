@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NAGCAlert | Admin Dashboard</title>
+    <style>
+        :root {
+            --navy:#202c40; --navy-light:#344866; --gold:#d4af37; --gold-dark:#a98216;
+            --gold-light:#fff7dc; --white:#fff; --background:#f8f9fb; --text:#4b5563;
+            --muted:#7c8797; --border:#e7e9ee; --green:#16794b; --red:#b42318; --blue:#2563eb;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:"Segoe UI",Arial,sans-serif; background:var(--background); color:var(--navy); }
+        button,input,select,textarea { font:inherit; }
+        button { cursor:pointer; }
+        .app { min-height:100vh; }
+        .sidebar { position:fixed; inset:0 auto 0 0; width:250px; padding:25px 18px; background:var(--white); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; }
+        .brand { display:flex; align-items:center; gap:12px; padding:0 8px 30px; border-bottom:1px solid var(--border); }
+        .brand-icon { width:45px; height:45px; border-radius:12px; background:var(--gold-light); border:1px solid #efdfaa; display:grid; place-items:center; font-size:24px; }
+        .brand h2 { font-size:20px; font-weight:800; letter-spacing:.3px; }
+        .brand p { margin-top:4px; font-size:10px; letter-spacing:1.4px; color:var(--gold-dark); font-weight:800; }
+        .menu-label { margin:28px 10px 12px; font-size:10px; font-weight:800; color:var(--muted); letter-spacing:1.5px; }
+        .nav-menu { display:flex; flex-direction:column; gap:7px; }
+        .nav-link { width:100%; display:flex; align-items:center; gap:13px; padding:13px 14px; border:0; border-radius:9px; background:transparent; color:var(--text); text-align:left; font-size:13px; font-weight:600; transition:.2s; }
+        .nav-link .icon { width:22px; text-align:center; font-size:17px; }
+        .nav-link:hover { background:#f6f7f9; color:var(--navy); }
+        .nav-link.active { background:var(--gold-light); color:var(--navy); font-weight:800; box-shadow:inset 3px 0 var(--gold); }
+        .sidebar-bottom { margin-top:auto; }
+        .admin-card { padding:14px 10px; border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; gap:10px; }
+        .avatar { width:39px; height:39px; border-radius:50%; background:var(--navy); color:#fff; display:grid; place-items:center; font-weight:800; flex-shrink:0; }
+        .admin-info { min-width:0; }
+        .admin-info h4 { font-size:12px; margin-bottom:4px; }
+        .admin-info p { color:var(--muted); font-size:10px; }
+        .main { margin-left:250px; min-height:100vh; }
+        .topbar { min-height:82px; padding:18px 32px; background:var(--white); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:20px; }
+        .topbar h1 { font-size:22px; font-weight:800; }
+        .topbar p { margin-top:5px; color:var(--muted); font-size:12px; }
+        .topbar-right { display:flex; align-items:center; gap:15px; }
+        .search-box input { width:230px; padding:11px 14px; border:1px solid var(--border); border-radius:8px; outline:none; font-size:12px; }
+        .search-box input:focus { border-color:var(--gold); }
+        .top-admin { display:flex; align-items:center; gap:10px; }
+        .top-admin .avatar { width:38px; height:38px; }
+        .top-admin strong { display:block; font-size:12px; }
+        .top-admin small { display:block; margin-top:4px; color:var(--muted); font-size:10px; }
+        .content { padding:30px 32px; max-width:1600px; margin:auto; }
+        .welcome-banner { padding:27px 30px; border:1px solid #f0e2ae; border-radius:13px; background:linear-gradient(110deg,#fff9e8,#fffdf7); margin-bottom:27px; }
+        .welcome-banner h2 { font-size:23px; margin-bottom:9px; }
+        .welcome-banner h2 span { color:var(--gold-dark); }
+        .welcome-banner p { color:var(--text); font-size:13px; line-height:1.7; }
+        .stats-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin-bottom:30px; }
+        .stat-card { padding:22px; background:var(--white); border:1px solid var(--border); border-radius:12px; box-shadow:0 3px 12px rgba(32,44,64,.025); }
+        .stat-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:19px; }
+        .stat-label { color:var(--text); font-size:12px; font-weight:600; }
+        .stat-icon { width:42px; height:42px; border-radius:10px; display:grid; place-items:center; font-size:20px; }
+        .icon-gold { background:var(--gold-light); } .icon-blue { background:#eff6ff; } .icon-green { background:#ecfdf3; } .icon-orange { background:#fff4e5; }
+        .stat-number { font-size:30px; font-weight:800; margin-bottom:8px; }
+        .stat-note { color:var(--muted); font-size:11px; }
+        .panel { background:var(--white); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:25px; }
+        .panel-header { padding:21px 23px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:15px; }
+        .panel-header h2 { font-size:16px; font-weight:800; }
+        .panel-header p { color:var(--muted); font-size:11px; margin-top:5px; }
+        .filter-row { padding:17px 22px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--border); }
+        .filter-row input,.filter-row select { padding:10px 12px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--text); font-size:12px; outline:none; }
+        .filter-row input { flex:1; min-width:160px; }
+        .filter-row input:focus,.filter-row select:focus { border-color:var(--gold); }
+        .table-wrap { width:100%; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; white-space:nowrap; }
+        thead { background:#fafbfc; }
+        th { padding:15px 19px; text-align:left; font-size:10px; color:var(--muted); letter-spacing:.6px; text-transform:uppercase; font-weight:800; }
+        td { padding:16px 19px; border-top:1px solid #f0f1f4; font-size:12px; color:var(--text); }
+        .report-title { color:var(--navy); font-weight:700; font-size:12px; }
+        .report-subtitle { display:block; color:var(--muted); font-size:10px; margin-top:5px; }
+        .status { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:20px; font-size:10px; font-weight:800; }
+        .status::before { content:""; width:6px; height:6px; background:currentColor; border-radius:50%; }
+        .status-pending { background:#fff5dc; color:#946200; } .status-approved { background:#e9f9ef; color:#16794b; }
+        .status-rejected { background:#fff0ef; color:#b42318; } .status-unknown { background:#eef2f6; color:#536273; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:10px 14px; border:1px solid transparent; border-radius:7px; font-size:11px; font-weight:800; transition:.2s; }
+        .btn-primary { background:var(--navy); color:#fff; } .btn-primary:hover { background:var(--navy-light); }
+        .btn-gold { background:var(--gold); color:var(--navy); } .btn-gold:hover { background:#e4c24f; }
+        .btn-success { background:#e9f9ef; color:var(--green); border-color:#c6ecd4; }
+        .btn-danger { background:#fff0ef; color:var(--red); border-color:#f5d1ce; }
+        .btn-outline { background:#fff; color:var(--text); border-color:var(--border); }
+        .btn:disabled { opacity:.55; cursor:not-allowed; }
+        .action-buttons { display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+        .empty-state { padding:45px 20px; text-align:center; color:var(--muted); font-size:12px; line-height:1.8; }
+        .empty-state .empty-icon { display:block; font-size:30px; margin-bottom:10px; }
+        .notice { display:none; padding:13px 16px; border-radius:8px; margin-bottom:18px; font-size:12px; line-height:1.6; }
+        .notice.show { display:block; } .notice.error { color:#922b21; background:#fff0ef; border:1px solid #f5d1ce; }
+        .notice.success { color:#166534; background:#ecfdf3; border:1px solid #c6ecd4; } .notice.info { color:#1e40af; background:#eff6ff; border:1px solid #dbeafe; }
+        .page { display:none; } .page.active { display:block; }
+        .section-heading { margin-bottom:22px; } .section-heading h2 { font-size:21px; margin-bottom:7px; }
+        .section-heading p { color:var(--muted); font-size:12px; line-height:1.7; }
+        .detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; }
+        .detail-item { padding:15px; border:1px solid var(--border); border-radius:8px; }
+        .detail-item label { display:block; color:var(--muted); font-size:10px; margin-bottom:7px; text-transform:uppercase; letter-spacing:.6px; }
+        .detail-item p { color:var(--navy); font-size:12px; line-height:1.7; overflow-wrap:anywhere; }
+        .modal-overlay { display:none; position:fixed; inset:0; padding:20px; background:rgba(17,24,39,.55); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay.show { display:flex; }
+        .modal { width:100%; max-width:650px; max-height:85vh; overflow-y:auto; background:#fff; border-radius:13px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+        .modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:20px 23px; border-bottom:1px solid var(--border); }
+        .modal-header h2 { font-size:17px; }
+        .modal-close { width:32px; height:32px; border:0; border-radius:7px; background:#f3f4f6; font-size:20px; color:var(--text); }
+        .modal-body { padding:23px; }
+        .modal-footer { display:flex; justify-content:flex-end; gap:9px; padding:16px 23px; border-top:1px solid var(--border); }
+        .edit-post-modal { max-width:700px; }
+        .edit-post-form-group { margin-bottom:18px; }
+        .edit-post-form-group label { display:block; margin-bottom:7px; color:var(--navy); font-size:12px; font-weight:700; }
+        .edit-post-form-group input,.edit-post-form-group select,.edit-post-form-group textarea { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--text); font-size:12px; outline:none; }
+        .edit-post-form-group input:focus,.edit-post-form-group select:focus,.edit-post-form-group textarea:focus { border-color:var(--gold); }
+        .edit-post-form-group textarea { min-height:120px; resize:vertical; line-height:1.6; }
+        .edit-post-attachments,.report-attachments { padding:15px; border:1px solid var(--border); border-radius:8px; background:#fafbfc; margin:12px 0; }
+        .edit-post-attachments h3,.report-attachments h3 { margin-bottom:6px; color:var(--navy); font-size:13px; }
+        .edit-post-attachments p,.report-attachments p { color:var(--muted); font-size:11px; line-height:1.6; }
+        .edit-post-attachment-list,.report-attachment-list,.online-admin-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin-top:12px; list-style:none; }
+        .edit-post-attachment-list:empty,.report-attachment-list:empty { display:none; }
+        .edit-post-attachment img,.edit-post-attachment video,.report-attachment img,.report-attachment video { display:block; width:100%; max-height:180px; object-fit:cover; border-radius:7px; background:#eef2f6; }
+        .edit-post-remove-attachment { display:block; margin-top:7px; font-size:11px; color:var(--text); }
+        .online-admins-body { padding:16px 23px; } .online-admin-count { color:var(--green); font-size:12px; font-weight:800; white-space:nowrap; }
+        .online-admin-list { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); }
+        .online-admin-item { display:flex; align-items:center; gap:9px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:12px; }
+        .online-admin-indicator { width:9px; height:9px; border-radius:50%; background:#16a34a; flex:0 0 auto; }
+        .online-admins-empty,.online-admins-loading { color:var(--muted); font-size:12px; }
+        .loading { display:inline-block; width:15px; height:15px; border:2px solid #d1d5db; border-top-color:var(--navy); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .footer { padding:20px 0; text-align:center; color:var(--muted); font-size:10px; }
+        .mobile-menu-btn { display:none; border:1px solid var(--border); background:#fff; border-radius:7px; padding:8px 11px; font-size:18px; }
+        .settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:12px; }
+        .settings-card { background:var(--white); border:1px solid var(--border); border-radius:12px; padding:20px; }
+        .settings-card h3 { font-size:14px; margin-bottom:12px; }
+        .settings-card p { color:var(--text); font-size:12px; line-height:1.7; }
+        .meta-item { display:flex; justify-content:space-between; gap:20px; padding:10px 0; border-bottom:1px solid #f0f1f4; font-size:12px; }
+        .meta-item:last-child { border-bottom:0; } .meta-item label { color:var(--muted); } .meta-item strong { color:var(--navy); font-weight:700; }
+        @media (max-width:1150px) { .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .content { padding:24px; } .topbar { padding:18px 24px; } }
+        @media (max-width:760px) {
+            .sidebar { transform:translateX(-100%); transition:transform .25s ease; box-shadow:8px 0 25px rgba(0,0,0,.08); }
+            .sidebar.open { transform:translateX(0); } .main { margin-left:0; }
+            .mobile-menu-btn { display:inline-flex; align-items:center; justify-content:center; }
+            .topbar { padding:15px; align-items:flex-start; } .topbar h1 { font-size:18px; } .topbar p { font-size:10px; }
+            .topbar-right .search-box,.top-admin .admin-details { display:none; } .content { padding:16px; }
+            .welcome-banner { padding:20px; } .welcome-banner h2 { font-size:19px; } .stats-grid { gap:10px; }
+            .stat-card { padding:15px; } .stat-number { font-size:25px; } .stat-icon { width:35px; height:35px; font-size:17px; }
+            .panel-header { padding:17px; } .filter-row { padding:13px; } .detail-grid,.settings-grid { grid-template-columns:1fr; }
+        }
+        @media (max-width:400px) { .stats-grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand"><div class="brand-icon">🛡️</div><div><h2>NAGCAlert</h2><p>ADMIN PORTAL</p></div></div>
+            <p class="menu-label">MAIN MENU</p>
+            <nav class="nav-menu">
+                <button class="nav-link active" data-page="dashboard"><span class="icon">▦</span>Dashboard</button>
+                <button class="nav-link" data-page="reports"><span class="icon">⚠</span>Disaster Reports</button>
+                <button class="nav-link" data-page="admins"><span class="icon">♙</span>Admin Accounts</button>
+                <button class="nav-link" data-page="logs"><span class="icon">☷</span>Activity Logs</button>
+                <button class="nav-link" data-page="settings"><span class="icon">⚙</span>Settings</button>
+            </nav>
+            <div class="sidebar-bottom">
+                <p class="menu-label">ADMIN SESSION</p>
+                <div class="admin-card">
+                    <div class="avatar" id="sidebarAvatar">A</div>
+                    <div class="admin-info"><h4 id="sidebarAdminName">Administrator</h4><p id="sidebarAdminEmail">Checking session...</p></div>
+                </div>
+                <button class="nav-link" id="logoutBtn" style="margin-top:12px;"><span class="icon">↪</span>Sign Out</button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open navigation">☰</button>
+                    <div><h1 id="pageTitle">Dashboard Overview</h1><p id="pageSubtitle">Monitor and manage disaster reports in Nagcarlan.</p></div>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-box"><input id="globalSearch" type="search" placeholder="Search reports..." /></div>
+                    <div class="top-admin"><div class="avatar" id="topAvatar">A</div><div class="admin-details"><strong id="topAdminName">Administrator</strong><small>Authorized Admin</small></div></div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div id="globalNotice" class="notice" role="status"></div>
+                <section class="page active" id="page-dashboard">
+                    <div class="welcome-banner">
+                        <h2>Welcome back, <span id="welcomeAdminName">Admin</span>!</h2>
+                        <p>Manage incoming disaster reports for the Municipality of Nagcarlan, Laguna. Review submitted reports and approve verified information before it appears in the residents' application.</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-top"><span class="stat-label">Reports Today</span><div class="stat-icon icon-gold">📋</div></div><div class="stat-number" id="statToday">0</div><div class="stat-note">Reports submitted today</div></div>
+                        <div class="stat-card"><div class="stat-top"><span class="stat-label">Pending Reports</span><div class="stat-icon icon-orange">⏳</div></div><div class="stat-number" id="statPending">0</div><div class="stat-note">Awaiting admin review</div></div>
+                        <div class="stat-card"><div class="stat-top"><span class="stat-label">Approved Reports</span><div class="stat-icon icon-green">✓</div></div><div class="stat-number" id="statApproved">0</div><div class="stat-note">Approved by administrators</div></div>
+                        <div class="stat-card"><div class="stat-top"><span class="stat-label">Active Admins</span><div class="stat-icon icon-blue">♙</div></div><div class="stat-number" id="statAdmins">—</div><div class="stat-note">Admin accounts</div></div>
+                    </div>
+                    <div class="panel online-admins-panel" id="onlineAdminsPanel">
+                        <div class="panel-header"><div><h2>Online Admins</h2><p>Administrators currently active in the dashboard</p></div><span class="online-admin-count" id="onlineAdminCount" aria-live="polite">—</span></div>
+                        <div class="online-admins-body" id="onlineAdminsBody" aria-live="polite">
+                            <ul class="online-admin-list" id="onlineAdminList"></ul>
+                            <p class="online-admins-loading" id="onlineAdminsLoading">Connecting to online presence...</p>
+                            <p class="online-admins-empty" id="onlineAdminsEmpty" hidden>No admins currently online</p>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><div><h2>Recent Disaster Reports</h2><p>Latest reports submitted by residents</p></div><button class="btn btn-outline" id="viewAllReportsBtn">View All Reports →</button></div>
+                        <div class="table-wrap"><table>
+                            <thead><tr><th>Report</th><th>Resident</th><th>Location</th><th>Date Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="recentReportsBody"><tr><td colspan="6"><div class="empty-state"><span class="loading"></span><br />Loading disaster reports...</div></td></tr></tbody>
+                        </table></div>
+                    </div>
+                </section>
+
+                <section class="page" id="page-reports">
+                    <div class="section-heading"><h2>Disaster Reports</h2><p>Review resident submissions. Only approved reports should be published to the residents' application.</p></div>
+                    <div class="panel">
+                        <div class="panel-header"><div><h2>All Submitted Reports</h2><p id="reportCountText">Reports from the database</p></div><button class="btn btn-outline" id="refreshReportsBtn">↻ Refresh</button></div>
+                        <div class="filter-row">
+                            <input id="reportSearch" type="search" placeholder="Search report, resident, or location..." />
+                            <select id="statusFilter"><option value="all">All Statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+                            <select id="typeFilter"><option value="all">All Disaster Types</option></select>
+                        </div>
+                        <div class="table-wrap"><table>
+                            <thead><tr><th>Report ID</th><th>Disaster Type</th><th>Resident</th><th>Location</th><th>Date Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="allReportsBody"><tr><td colspan="7"><div class="empty-state"><span class="loading"></span><br />Loading reports...</div></td></tr></tbody>
+                        </table></div>
+                    </div>
+                </section>
+
+                <section class="page" id="page-admins">
+                    <div class="section-heading"><h2>Admin Accounts</h2><p>Manage the current admin roster and review pending requests from new administrator applicants.</p></div>
+                    <div class="panel">
+                        <div class="panel-header"><div><h2>Authorized Administrators</h2><p>Access is controlled via Supabase auth and the admin authorization function.</p></div></div>
+                        <div class="table-wrap"><table>
+                            <thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+                            <tbody id="adminsTableBody"><tr><td colspan="4"><div class="empty-state"><span class="loading"></span><br />Loading admin session...</div></td></tr></tbody>
+                        </table></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><div><h2>Pending Admin Signup Requests</h2><p>Applicants are only approved by an existing authorized administrator.</p></div><button class="btn btn-outline" id="refreshAdminRequestsBtn">↻ Refresh</button></div>
+                        <div class="table-wrap"><table>
+                            <thead><tr><th>Applicant</th><th>Email</th><th>Request Date</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="adminSignupRequestsBody"><tr><td colspan="5"><div class="empty-state"><span class="loading"></span><br />Loading admin requests...</div></td></tr></tbody>
+                        </table></div>
+                    </div>
+                </section>
+
+                <section class="page" id="page-logs">
+                    <div class="section-heading"><h2>Activity Logs</h2><p>Review actions performed during the current session.</p></div>
+                    <div class="panel">
+                        <div class="panel-header"><div><h2>Session Activity</h2><p>Recent dashboard actions and status changes.</p></div><button class="btn btn-outline" id="clearLogsBtn">Clear Logs</button></div>
+                        <div class="table-wrap"><table>
+                            <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Details</th></tr></thead>
+                            <tbody id="activityLogsBody"><tr><td colspan="4"><div class="empty-state"><span class="loading"></span><br />Loading activity...</div></td></tr></tbody>
+                        </table></div>
+                    </div>
+                </section>
+
+                <section class="page" id="page-settings">
+                    <div class="section-heading"><h2>Settings</h2><p>System information and current admin session details.</p></div>
+                    <div class="settings-grid">
+                        <div class="settings-card"><h3>Account Information</h3>
+                            <div class="meta-item"><label>Email</label><strong id="settingsAdminEmail">—</strong></div>
+                            <div class="meta-item"><label>Access</label><strong id="accountAccessStatus">Authorized</strong></div>
+                            <div class="meta-item"><label>Role</label><strong id="settingsRole">Administrator</strong></div>
+                        </div>
+                        <div class="settings-card"><h3>System</h3>
+                            <div class="meta-item"><label>Database</label><strong>Supabase</strong></div>
+                            <div class="meta-item"><label>Auth Check</label><strong id="settingsAuthCheck">Active</strong></div>
+                            <div class="meta-item"><label>Last Login</label><strong id="settingsLastLogin">Current Session</strong></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="reportModal" aria-modal="true" role="dialog">
+        <div class="modal">
+            <div class="modal-header"><h2>Report Details</h2><button class="modal-close" id="closeReportModal" aria-label="Close">×</button></div>
+            <div class="modal-body" id="reportModalBody"></div>
+            <section class="modal-body report-attachments" id="reportAttachmentsBody" aria-live="polite">
+                <h3>Resident Attachments</h3>
+                <p id="reportAttachmentsNotice">Attachment previews will appear here when the existing upload format is connected.</p>
+                <div data-report-attachments data-report-id="">
+                    <ul class="report-attachment-list" data-report-images aria-label="Resident-uploaded images"></ul>
+                    <ul class="report-attachment-list" data-report-videos aria-label="Resident-uploaded videos"></ul>
+                </div>
+            </section>
+            <div class="modal-footer" id="reportModalFooter"></div>
+        </div>
+    </div>
+
+    <template id="editReportActionTemplate">
+        <button class="btn btn-outline edit-report-btn" type="button" data-action="edit" data-id="">Edit</button>
+    </template>
+
+    <div class="modal-overlay" id="editPostModal" aria-modal="true" role="dialog" aria-labelledby="editPostModalTitle" aria-hidden="true">
+        <div class="modal edit-post-modal">
+            <div class="modal-header"><h2 id="editPostModalTitle">Edit Post</h2><button class="modal-close" id="closeEditPostModalBtn" type="button" aria-label="Close Edit Post">×</button></div>
+            <form class="edit-post-form" id="editPostForm">
+                <div class="modal-body">
+                    <input id="editPostId" name="postId" type="hidden" />
+                    <div class="edit-post-form-group"><label for="editPostTitle">Post Title</label><input id="editPostTitle" name="title" type="text" /></div>
+                    <div class="edit-post-form-group"><label for="editPostDescription">Description or Incident Details</label><textarea id="editPostDescription" name="description"></textarea></div>
+                    <div class="edit-post-form-group"><label for="editPostDisasterType">Disaster Type or Category</label><select id="editPostDisasterType" name="disasterType"><option value="">Select a disaster type</option></select></div>
+                    <div class="edit-post-form-group"><label for="editPostLocation">Location</label><input id="editPostLocation" name="location" type="text" /></div>
+                    <section class="edit-post-attachments" id="editPostAttachments">
+                        <h3>Existing Attachments</h3>
+                        <p id="editPostNoAttachments">Attachment previews will appear here when the existing upload format is connected.</p>
+                        <ul class="edit-post-attachment-list" id="editPostExistingImages" aria-label="Existing report images"></ul>
+                        <ul class="edit-post-attachment-list" id="editPostExistingVideos" aria-label="Existing report videos"></ul>
+                        <p>Original attachments will be preserved unless intentionally replaced or removed.</p>
+                    </section>
+                    <section class="edit-post-attachments" id="editPostNewAttachments">
+                        <h3>Add or Replace Attachments</h3>
+                        <div class="edit-post-form-group"><label for="editPostImageFiles">Add or replace images</label><input id="editPostImageFiles" name="imageFiles" type="file" accept="image/*" multiple /></div>
+                        <div class="edit-post-form-group"><label for="editPostVideoFiles">Add or replace videos</label><input id="editPostVideoFiles" name="videoFiles" type="file" accept="video/*" multiple /></div>
+                    </section>
+                </div>
+                <div class="modal-footer"><button class="btn btn-outline" id="cancelEditPostBtn" type="button">Cancel</button><button class="btn btn-primary" id="saveEditPostBtn" type="submit">Save Changes</button></div>
+            </form>
+        </div>
+    </div>
+
+    <template id="reportImageAttachmentTemplate"><li class="report-attachment"><a class="report-image-link" data-attachment-url="" target="_blank" rel="noopener noreferrer"><img data-attachment-url="" alt="Resident-uploaded report image" /></a></li></template>
+    <template id="reportVideoAttachmentTemplate"><li class="report-attachment"><video data-attachment-url="" controls preload="metadata" aria-label="Resident-uploaded report video"></video></li></template>
+    <template id="editPostImageAttachmentTemplate"><li class="edit-post-attachment"><a data-attachment-url="" target="_blank" rel="noopener noreferrer"><img data-attachment-url="" alt="Existing resident-uploaded image" /></a><label class="edit-post-remove-attachment"><input type="checkbox" data-remove-existing-attachment /> Remove image</label></li></template>
+    <template id="editPostVideoAttachmentTemplate"><li class="edit-post-attachment"><video data-attachment-url="" controls preload="metadata"></video><label class="edit-post-remove-attachment"><input type="checkbox" data-remove-existing-attachment /> Remove video</label></li></template>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script>
+        (() => {
+            "use strict";
+
+            const $ = (selector) => document.querySelector(selector);
+            const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+            let currentUser = null;
+            let reports = [];
+            let activityLogs = [];
+            let adminSignupRequests = [];
+            let isBusy = false;
+            let adminRequestActionInFlight = false;
+            let adminPresenceChannel = null;
+
+            const pageInfo = {
+                dashboard: { title:"Dashboard Overview", subtitle:"Monitor and manage disaster reports in Nagcarlan." },
+                reports: { title:"Disaster Reports", subtitle:"Review, approve, and reject resident submissions." },
+                admins: { title:"Admin Accounts", subtitle:"Manage administrator access information." },
+                logs: { title:"Activity Logs", subtitle:"Review actions performed during this session." },
+                settings: { title:"Settings", subtitle:"System and account information." }
+            };
+
+            function setText(id, value) {
+                const element = document.getElementById(id);
+                if (element) element.textContent = String(value ?? "");
+            }
+
+            function escapeHTML(value) {
+                return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+                    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+                })[character]);
+            }
+
+            function firstValue(object, keys, fallback = "") {
+                for (const key of keys) {
+                    const value = object?.[key];
+                    if (value !== null && value !== undefined && String(value).trim() !== "") return value;
+                }
+                return fallback;
+            }
+
+            function reportRecord(report) {
+                return report && report.raw && typeof report.raw === "object" ? report.raw : report;
+            }
+
+            function reportId(report) {
+                const record = reportRecord(report);
+                const id = firstValue(record, ["id", "report_id", "uuid"], "");
+                return id === null || id === undefined ? "" : String(id).trim();
+            }
+
+            function normalizeStatus(value) {
+                const status = String(value ?? "Pending").trim().toLowerCase();
+                if (status === "approved" || status === "published") return "Approved";
+                if (status === "rejected" || status === "declined") return "Rejected";
+                if (status === "pending" || status === "under review") return "Pending";
+                return value ? String(value).trim() : "Pending";
+            }
+
+            function statusClass(status) {
+                switch (normalizeStatus(status).toLowerCase()) {
+                    case "approved": return "status-approved";
+                    case "rejected": return "status-rejected";
+                    case "pending": return "status-pending";
+                    default: return "status-unknown";
+                }
+            }
+
+            function formatDate(value) {
+                if (!value) return "—";
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return String(value);
+                return date.toLocaleString("en-PH", { year:"numeric", month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
+            }
+
+            function reportName(report) {
+                const raw = reportRecord(report);
+                return firstValue(raw, ["resident_name", "full_name", "name", "reporter_name", "user_name", "submitted_by_name"], "Unknown Resident");
+            }
+
+            function reportType(report) {
+                const raw = reportRecord(report);
+                return firstValue(raw, ["disaster_type", "type", "incident_type", "category", "title"], "Unspecified Disaster");
+            }
+
+            function reportLocation(report) {
+                const raw = reportRecord(report);
+                return firstValue(raw, ["location", "address", "barangay", "incident_location", "place"], "Location not provided");
+            }
+
+            function reportDate(report) {
+                return firstValue(reportRecord(report), ["created_at", "submitted_at", "date_submitted", "report_date", "date"], "");
+            }
+
+            function reportStatus(report) {
+                return normalizeStatus(firstValue(reportRecord(report), ["status", "report_status", "approval_status"], "Pending"));
+            }
+
+            function showNotice(message, type = "info") {
+                const notice = $("#globalNotice");
+                if (!notice) return;
+                notice.textContent = message;
+                notice.className = "notice show " + type;
+                window.scrollTo({ top:0, behavior:"smooth" });
+            }
+
+            function hideNotice() {
+                const notice = $("#globalNotice");
+                if (!notice) return;
+                notice.textContent = "";
+                notice.className = "notice";
+            }
+
+            function setAdminInformation(user) {
+                const email = user?.email || "Administrator";
+                const displayName = user?.user_metadata?.full_name || (email.includes("@") ? email.split("@")[0] : email);
+                const initial = displayName.charAt(0).toUpperCase() || "A";
+                if ($("#sidebarAdminName")) $("#sidebarAdminName").textContent = displayName;
+                if ($("#sidebarAdminEmail")) $("#sidebarAdminEmail").textContent = email;
+                if ($("#topAdminName")) $("#topAdminName").textContent = displayName;
+                if ($("#welcomeAdminName")) $("#welcomeAdminName").textContent = displayName;
+                if ($("#sidebarAvatar")) $("#sidebarAvatar").textContent = initial;
+                if ($("#topAvatar")) $("#topAvatar").textContent = initial;
+                setText("accountEmail", email);
+                setText("settingsAdminEmail", email);
+                setText("accountAccessStatus", "Authorized");
+                setText("settingsRole", "Administrator");
+                setText("settingsAuthCheck", "Active");
+                setText("settingsLastLogin", "Current Session");
+            }
+
+            function renderAdminTable() {
+                const body = $("#adminsTableBody");
+                if (!body) return;
+                const adminName = currentUser?.user_metadata?.full_name || (currentUser?.email ? currentUser.email.split("@")[0] : "Administrator");
+                const adminEmail = currentUser?.email || "Unknown";
+                body.innerHTML = `<tr><td>${escapeHTML(adminName)}</td><td>${escapeHTML(adminEmail)}</td><td>Administrator</td><td><span class="status status-approved">Active</span></td></tr>`;
+            }
+
+            function renderOnlineAdmins() {
+                const list = $("#onlineAdminList");
+                const count = $("#onlineAdminCount");
+                const empty = $("#onlineAdminsEmpty");
+                const loading = $("#onlineAdminsLoading");
+                if (!list || !count || !empty || !loading) return;
+
+                const state = adminPresenceChannel?.presenceState() || {};
+                const uniqueAdmins = new Map();
+
+                Object.values(state).flat().forEach((presence) => {
+                    const userId = presence.user_id;
+                    if (!userId || uniqueAdmins.has(String(userId))) return;
+                    uniqueAdmins.set(String(userId), presence.name || "Administrator");
+                });
+
+                const admins = [...uniqueAdmins.entries()];
+                list.innerHTML = admins.map(([id, name]) => `
+                    <li class="online-admin-item" data-admin-id="${escapeHTML(id)}">
+                        <span class="online-admin-indicator" aria-label="Online"></span>
+                        <span class="online-admin-name">${escapeHTML(name)}</span>
+                    </li>
+                `).join("");
+
+                count.textContent = `${admins.length} online`;
+                loading.hidden = true;
+                empty.hidden = admins.length > 0;
+            }
+
+            function startAdminPresence() {
+                if (!window.supabaseClient || !currentUser || adminPresenceChannel) return;
+
+                const email = currentUser.email || "";
+                const displayName = currentUser.user_metadata?.full_name ||
+                    (email.includes("@") ? email.split("@")[0] : email) || "Administrator";
+
+                adminPresenceChannel = window.supabaseClient
+                    .channel("nagcalert-admin-presence", { config:{ presence:{ key:String(currentUser.id) } } })
+                    .on("presence", { event:"sync" }, renderOnlineAdmins)
+                    .subscribe(async (status) => {
+                        if (status === "SUBSCRIBED") {
+                            const { error } = await adminPresenceChannel.track({
+                                user_id: String(currentUser.id),
+                                name: displayName,
+                                online_at: new Date().toISOString()
+                            });
+                            if (error) {
+                                console.error("Admin presence tracking failed:", error);
+                                const loading = $("#onlineAdminsLoading");
+                                if (loading) { loading.hidden = false; loading.textContent = "Unable to load online admins."; }
+                                setText("onlineAdminCount", "—");
+                                return;
+                            }
+                            renderOnlineAdmins();
+                        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+                            console.error("Admin presence channel status:", status);
+                            const loading = $("#onlineAdminsLoading");
+                            if (loading) { loading.hidden = false; loading.textContent = "Unable to load online admins."; }
+                            setText("onlineAdminCount", "—");
+                        }
+                    });
+            }
+
+            function renderAdminRequestsTable() {
+                const body = $("#adminSignupRequestsBody");
+                if (!body) return;
+                if (!adminSignupRequests.length) {
+                    body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">📌</span>No pending admin signup requests.</div></td></tr>`;
+                    return;
+                }
+                body.innerHTML = adminSignupRequests.map((request) => {
+                    const userId = request.user_id || request.userId || "";
+                    const applicantName = request.full_name || "Unknown Applicant";
+                    const applicantEmail = request.email || "Unknown Email";
+                    const status = normalizeStatus(request.status || "pending");
+                    return `<tr>
+                        <td>${escapeHTML(applicantName)}</td><td>${escapeHTML(applicantEmail)}</td>
+                        <td>${escapeHTML(formatDate(request.created_at))}</td>
+                        <td><span class="status ${statusClass(status)}">${escapeHTML(status)}</span></td>
+                        <td><div class="action-buttons">
+                            <button class="btn btn-success" data-admin-request-action="approved" data-user-id="${escapeHTML(userId)}" ${adminRequestActionInFlight ? "disabled" : ""}>Approve</button>
+                            <button class="btn btn-danger" data-admin-request-action="rejected" data-user-id="${escapeHTML(userId)}" ${adminRequestActionInFlight ? "disabled" : ""}>Reject</button>
+                        </div></td>
+                    </tr>`;
+                }).join("");
+            }
+
+            async function loadAdminSignupRequests() {
+                const body = $("#adminSignupRequestsBody");
+                if (!body) return;
+                body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="loading"></span><br />Loading admin requests...</div></td></tr>`;
+                try {
+                    const { data, error } = await window.supabaseClient.from("admin_signup_requests")
+                        .select("*").eq("status", "pending").order("created_at", { ascending:false });
+                    if (error) throw error;
+                    adminSignupRequests = Array.isArray(data) ? data : [];
+                    renderAdminRequestsTable();
+                } catch (error) {
+                    console.error("Failed to load admin requests:", error);
+                    body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">⚠</span>Unable to load admin requests.<br />${escapeHTML(error.message || "Please check the database and Supabase permissions.")}</div></td></tr>`;
+                }
+            }
+
+            async function reviewAdminSignupRequest(applicantUserId, decision) {
+                if (!applicantUserId) { showNotice("Missing applicant ID.", "error"); return; }
+                if (String(applicantUserId) === String(currentUser?.id)) { showNotice("You cannot approve or reject your own signup request.", "error"); return; }
+                if (adminRequestActionInFlight) return;
+                const actionText = decision === "approved" ? "approve" : "reject";
+                if (!window.confirm(`Are you sure you want to ${actionText} this admin signup request?`)) return;
+
+                adminRequestActionInFlight = true;
+                try {
+                    const { error } = await window.supabaseClient.rpc("review_admin_signup_request", {
+                        p_user_id:applicantUserId, p_decision:decision
+                    });
+                    if (error) throw error;
+                    showNotice(`Admin signup request successfully ${actionText}d.`, "success");
+                    await loadAdminSignupRequests();
+                } catch (error) {
+                    console.error("Admin signup review failed:", error);
+                    showNotice("The request could not be updated. " + (error.message || "Check the Supabase RPC and permissions."), "error");
+                } finally {
+                    adminRequestActionInFlight = false;
+                }
+            }
+
+            function logActivity(action, details) {
+                activityLogs.unshift({ time:new Date(), admin:currentUser?.email || "Administrator", action, details });
+                renderActivityLogs();
+            }
+
+            function renderActivityLogs() {
+                const body = $("#activityLogsBody");
+                if (!body) return;
+                if (!activityLogs.length) {
+                    body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><span class="empty-icon">☷</span>No activity recorded during this session.</div></td></tr>`;
+                    return;
+                }
+                body.innerHTML = activityLogs.map((item) => `<tr><td>${escapeHTML(formatDate(item.time))}</td><td>${escapeHTML(item.admin)}</td><td>${escapeHTML(item.action)}</td><td>${escapeHTML(item.details)}</td></tr>`).join("");
+            }
+
+            async function checkAdminSession() {
+                if (!window.supabaseClient) throw new Error("Supabase is not configured. Check js/supabase-config.js.");
+                const { data, error } = await window.supabaseClient.auth.getSession();
+                if (error) throw error;
+                const session = data?.session;
+                if (!session?.user) { window.location.replace("index.html"); return false; }
+                currentUser = session.user;
+
+                const { data:isAdmin, error:adminError } = await window.supabaseClient.rpc("is_nagcalert_admin");
+                if (adminError) {
+                    console.error("Admin verification failed:", adminError);
+                    throw new Error("Hindi ma-verify ang admin access. Check ang Supabase function at permissions.");
+                }
+                if (isAdmin !== true) { await window.supabaseClient.auth.signOut(); window.location.replace("index.html"); return false; }
+                setAdminInformation(currentUser);
+                renderAdminTable();
+                return true;
+            }
+
+            async function loadReports() {
+                const { data, error } = await window.supabaseClient.from("disaster_reports")
+                    .select("*").order("created_at", { ascending:false });
+                if (error) {
+                    console.error("Loading reports failed:", error);
+                    showNotice("Hindi ma-load ang disaster reports. Tingnan ang browser Console at ang disaster_reports table columns sa Supabase.", "error");
+                    renderReportTables();
+                    updateStats();
+                    return;
+                }
+                reports = Array.isArray(data) ? data.map((record) => ({ ...record, raw:record })) : [];
+                renderReportTables();
+                updateStats();
+                populateTypeFilter();
+            }
+
+            function updateStats() {
+                const today = new Date();
+                const todayReports = reports.filter((report) => {
+                    const value = reportDate(report);
+                    if (!value) return false;
+                    const date = new Date(value);
+                    return !Number.isNaN(date.getTime()) &&
+                        date.getFullYear() === today.getFullYear() &&
+                        date.getMonth() === today.getMonth() &&
+                        date.getDate() === today.getDate();
+                });
+                setText("statToday", todayReports.length);
+                setText("statPending", reports.filter((report) => reportStatus(report).toLowerCase() === "pending").length);
+                setText("statApproved", reports.filter((report) => reportStatus(report).toLowerCase() === "approved").length);
+                setText("statAdmins", "—");
+            }
+
+            function populateTypeFilter() {
+                const select = $("#typeFilter");
+                if (!select) return;
+                const current = select.value || "all";
+                const types = [...new Set(reports.map(reportType))].filter(Boolean).sort();
+                select.innerHTML = '<option value="all">All Disaster Types</option>' +
+                    types.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("");
+                if (types.includes(current)) select.value = current;
+            }
+
+            function getFilteredReports() {
+                const search = ($("#reportSearch")?.value || $("#globalSearch")?.value || "").trim().toLowerCase();
+                const status = $("#statusFilter")?.value || "all";
+                const type = $("#typeFilter")?.value || "all";
+                return reports.filter((report) => {
+                    const searchable = [reportId(report), reportName(report), reportType(report), reportLocation(report)].join(" ").toLowerCase();
+                    return (!search || searchable.includes(search)) &&
+                        (status === "all" || reportStatus(report).toLowerCase() === status) &&
+                        (type === "all" || reportType(report) === type);
+                });
+            }
+
+            function isEditableStatus(report) {
+                const status = reportStatus(report).trim().toLowerCase();
+                return status === "pending" || status === "approved" || status === "published";
+            }
+
+            function actionButtons(report) {
+                const id = reportId(report);
+                const safeId = escapeHTML(id);
+                return `<div class="action-buttons">
+                    <button class="btn btn-outline" data-action="view" data-id="${safeId}">View</button>
+                    ${id && isEditableStatus(report) ? `<button class="btn btn-outline edit-report-btn" data-action="edit" data-id="${safeId}">Edit</button>` : ""}
+                    <button class="btn btn-success" data-action="approve" data-id="${safeId}">Approve</button>
+                    <button class="btn btn-danger" data-action="reject" data-id="${safeId}">Reject</button>
+                </div>`;
+            }
+
+            function reportRow(report, showId = false) {
+                const status = reportStatus(report);
+                const idCell = showId ? `<td>${escapeHTML(reportId(report))}</td>` : "";
+                return `<tr>${idCell}
+                    <td><span class="report-title">${escapeHTML(reportType(report))}</span><span class="report-subtitle">Report #${escapeHTML(reportId(report))}</span></td>
+                    <td>${escapeHTML(reportName(report))}</td><td>${escapeHTML(reportLocation(report))}</td>
+                    <td>${escapeHTML(formatDate(reportDate(report)))}</td>
+                    <td><span class="status ${statusClass(status)}">${escapeHTML(status)}</span></td>
+                    <td>${actionButtons(report)}</td></tr>`;
+            }
+
+            function renderReportTables() {
+                const recentBody = $("#recentReportsBody");
+                const allBody = $("#allReportsBody");
+                const recent = [...reports].sort((a,b) => new Date(reportDate(b) || 0) - new Date(reportDate(a) || 0)).slice(0,5);
+                if (recentBody) {
+                    recentBody.innerHTML = recent.length
+                        ? recent.map((report) => reportRow(report)).join("")
+                        : `<tr><td colspan="6"><div class="empty-state"><span class="empty-icon">📋</span>No disaster reports found.</div></td></tr>`;
+                }
+                const filtered = getFilteredReports();
+                setText("reportCountText", `${filtered.length} report(s) displayed`);
+                if (allBody) {
+                    allBody.innerHTML = filtered.length
+                        ? filtered.map((report) => reportRow(report,true)).join("")
+                        : `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">🔎</span>No reports match your search or filters.</div></td></tr>`;
+                }
+            }
+
+            function findReportById(id) {
+                if (id === null || id === undefined) return null;
+                const normalizedId = String(id).trim();
+                if (!normalizedId) return null;
+                return reports.find((report) => {
+                    const candidate = reportId(report);
+                    return candidate !== "" && String(candidate).trim() === normalizedId;
+                }) || null;
+            }
+
+            async function updateReportStatus(id, newStatus) {
+                if (isBusy) return;
+                const report = findReportById(id);
+                if (!report) { showNotice("Hindi mahanap ang report na ito.", "error"); return; }
+                if (!window.confirm(`Sigurado ka bang gusto mong ${newStatus.toLowerCase()} ang report na ito?`)) return;
+
+                const raw = reportRecord(report);
+                const keyColumn = ["id","report_id","uuid"].find((key) => raw?.[key] !== null && raw?.[key] !== undefined && String(raw[key]).trim() !== "");
+                const statusColumn = ["status","report_status","approval_status"].find((key) => Object.prototype.hasOwnProperty.call(raw || {}, key));
+                if (!keyColumn || !statusColumn) { showNotice("Hindi matukoy ang ID o status column ng database.", "error"); return; }
+
+                isBusy = true;
+                hideNotice();
+                try {
+                    const { data,error } = await window.supabaseClient.from("disaster_reports")
+                        .update({ [statusColumn]:newStatus.toLowerCase() }).eq(keyColumn,raw[keyColumn]).select();
+                    if (error) throw error;
+                    if (!data || !data.length) throw new Error("Walang na-update na row. Tingnan ang database permissions at RLS policies.");
+                    logActivity(newStatus === "Approved" ? "Approved Report" : "Rejected Report", `Report #${reportId(report)} — ${reportType(report)}`);
+                    showNotice(`Report #${reportId(report)} successfully marked as ${newStatus}.`, "success");
+                    await loadReports();
+                } catch (error) {
+                    console.error("Updating report status failed:", error);
+                    showNotice("Hindi na-update ang report. " + (error.message || "Pakitingnan ang browser Console."), "error");
+                } finally { isBusy = false; }
+            }
+
+            function populateEditDisasterTypes(currentType) {
+                const select = $("#editPostDisasterType");
+                if (!select) return;
+
+                const types = new Set();
+                reports.forEach((report) => {
+                    const raw = reportRecord(report);
+                    const value = raw?.disaster_type;
+                    if (value !== null && value !== undefined && String(value).trim()) types.add(String(value));
+                });
+                if (currentType !== null && currentType !== undefined && String(currentType).trim()) {
+                    types.add(String(currentType));
+                }
+
+                select.replaceChildren(new Option("Select a disaster type", ""));
+                [...types].sort((a,b) => a.localeCompare(b)).forEach((type) => {
+                    select.add(new Option(type, type));
+                });
+                select.value = currentType === null || currentType === undefined ? "" : String(currentType);
+            }
+
+            function setEditField(element, raw, column, value) {
+                if (!element) return;
+                element.disabled = !Object.prototype.hasOwnProperty.call(raw || {}, column);
+                if (element.disabled) {
+                    element.value = "";
+                    element.title = `The ${column} field is not present in this report record.`;
+                    return;
+                }
+                element.removeAttribute("title");
+                element.value = value === null || value === undefined ? "" : String(value);
+            }
+
+            function openEditPost(id) {
+                const report = findReportById(id);
+                if (!report) {
+                    showNotice("Hindi mahanap ang report. Pakisubukang muli mula sa report list.", "error");
+                    return;
+                }
+                if (!isEditableStatus(report)) {
+                    showNotice("Only pending and approved reports can be edited.", "error");
+                    return;
+                }
+
+                const raw = reportRecord(report);
+                const reportKey = reportId(report);
+                const idInput = $("#editPostId");
+                if (!idInput || !reportKey) {
+                    showNotice("Hindi matukoy ang ID ng report para ma-edit.", "error");
+                    return;
+                }
+
+                idInput.value = String(reportKey);
+                setEditField($("#editPostTitle"), raw, "title", raw.title);
+                setEditField($("#editPostDescription"), raw, "description", raw.description);
+                setEditField($("#editPostLocation"), raw, "location", raw.location);
+
+                // Populate available values first, then select the record's current disaster type.
+                populateEditDisasterTypes(raw.disaster_type);
+                setEditField($("#editPostDisasterType"), raw, "disaster_type", raw.disaster_type);
+
+                const modal = $("#editPostModal");
+                if (modal) {
+                    modal.dataset.reportId = String(reportKey);
+                    modal.classList.add("show");
+                    modal.setAttribute("aria-hidden", "false");
+                }
+
+                const attachmentNotice = $("#editPostNoAttachments");
+                if (attachmentNotice) {
+                    attachmentNotice.textContent = "Attachment previews and editing are hooks only until the existing upload format is identified.";
+                }
+            }
+
+            function closeEditPost() {
+                const modal = $("#editPostModal");
+                if (!modal) return;
+                modal.classList.remove("show");
+                modal.setAttribute("aria-hidden", "true");
+            }
+
+            async function saveEditPost(event) {
+                event.preventDefault();
+                if (isBusy) return;
+
+                const id = $("#editPostId")?.value;
+                const report = findReportById(id);
+                if (!report) {
+                    showNotice("Hindi mahanap ang report. Pakisara ang form at buksan ito muli mula sa report list.", "error");
+                    return;
+                }
+                if (!isEditableStatus(report)) {
+                    showNotice("Only pending and approved reports can be edited.", "error");
+                    return;
+                }
+
+                const raw = reportRecord(report);
+                const fieldMap = [
+                    ["title", $("#editPostTitle")],
+                    ["description", $("#editPostDescription")],
+                    ["disaster_type", $("#editPostDisasterType")],
+                    ["location", $("#editPostLocation")]
+                ];
+                const updates = {};
+                fieldMap.forEach(([column, element]) => {
+                    if (element && !element.disabled && Object.prototype.hasOwnProperty.call(raw, column)) {
+                        updates[column] = element.value.trim();
+                    }
+                });
+
+                if (Object.keys(updates).length !== fieldMap.length) {
+                    showNotice("Hindi ma-save ang lahat ng field dahil may kinakailangang column na wala sa report record.", "error");
+                    return;
+                }
+
+                const keyColumn = ["id","report_id","uuid"].find((key) => raw?.[key] !== null && raw?.[key] !== undefined && String(raw[key]).trim() !== "");
+                if (!keyColumn) {
+                    showNotice("Hindi matukoy ang ID column ng report.", "error");
+                    return;
+                }
+
+                isBusy = true;
+                const saveButton = $("#saveEditPostBtn");
+                if (saveButton) saveButton.disabled = true;
+
+                try {
+                    const { data,error } = await window.supabaseClient.from("disaster_reports")
+                        .update(updates).eq(keyColumn,raw[keyColumn]).select();
+                    if (error) throw error;
+                    if (!data || data.length === 0) throw new Error("Walang na-update na row. Tingnan ang database permissions at RLS policies.");
+
+                    closeEditPost();
+                    logActivity("Edited Report", `Report #${reportId(report)} — ${reportType(report)}`);
+                    showNotice(`Report #${reportId(report)} successfully updated.`, "success");
+                    await loadReports();
+                } catch (error) {
+                    console.error("Updating report failed:", error);
+                    showNotice("Hindi na-update ang report. " + (error.message || "Pakitingnan ang browser Console."), "error");
+                } finally {
+                    isBusy = false;
+                    if (saveButton) saveButton.disabled = false;
+                }
+            }
+
+            function openReportDetails(id) {
+                const report = findReportById(id);
+                if (!report) { showNotice("Hindi mahanap ang report.", "error"); return; }
+
+                const details = [
+                    ["Report ID",reportId(report)], ["Disaster Type",reportType(report)],
+                    ["Resident",reportName(report)], ["Location",reportLocation(report)],
+                    ["Date Submitted",formatDate(reportDate(report))], ["Status",reportStatus(report)],
+                    ["Description",firstValue(reportRecord(report),["description","details","incident_description","message","report_details"],"No description provided.")],
+                    ["Contact",firstValue(reportRecord(report),["contact_number","phone","phone_number"],"Not provided")],
+                    ["Barangay",firstValue(reportRecord(report),["barangay","village"],"Not provided")]
+                ];
+                const modalBody = $("#reportModalBody");
+                const modalFooter = $("#reportModalFooter");
+                const modal = $("#reportModal");
+
+                if (modalBody) {
+                    modalBody.innerHTML = `<div class="detail-grid">${details.map(([label,value]) => `<div class="detail-item"><label>${escapeHTML(label)}</label><p>${escapeHTML(value)}</p></div>`).join("")}</div>`;
+                }
+                const wrapper = $("#reportAttachmentsBody [data-report-attachments]");
+                if (wrapper) wrapper.dataset.reportId = String(reportId(report));
+                const attachmentNotice = $("#reportAttachmentsNotice");
+                if (attachmentNotice) attachmentNotice.textContent = "Attachment previews are hooks only until the existing upload format is identified.";
+
+                if (modalFooter) {
+                    modalFooter.innerHTML = `<button class="btn btn-outline" id="modalCloseBtn">Close</button><button class="btn btn-danger" id="modalRejectBtn">Reject Report</button><button class="btn btn-success" id="modalApproveBtn">Approve Report</button>`;
+                }
+                if (modal) modal.classList.add("show");
+                $("#modalCloseBtn")?.addEventListener("click",closeReportModal);
+                $("#modalApproveBtn")?.addEventListener("click",async () => { closeReportModal(); await updateReportStatus(id,"Approved"); });
+                $("#modalRejectBtn")?.addEventListener("click",async () => { closeReportModal(); await updateReportStatus(id,"Rejected"); });
+            }
+
+            function closeReportModal() {
+                const modal = $("#reportModal");
+                if (modal) modal.classList.remove("show");
+            }
+
+            function switchPage(pageName) {
+                if (!pageInfo[pageName]) return;
+                document.querySelectorAll(".page").forEach((page) => page.classList.remove("active"));
+                $("#page-" + pageName)?.classList.add("active");
+                document.querySelectorAll(".nav-link[data-page]").forEach((button) => button.classList.toggle("active",button.dataset.page === pageName));
+                setText("pageTitle",pageInfo[pageName].title);
+                setText("pageSubtitle",pageInfo[pageName].subtitle);
+                $("#sidebar")?.classList.remove("open");
+                hideNotice();
+                if (pageName === "logs") renderActivityLogs();
+                if (pageName === "reports") renderReportTables();
+                if (pageName === "admins") loadAdminSignupRequests();
+            }
+
+            function bindReportActions(container) {
+                if (!container) return;
+                container.addEventListener("click",async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    const button = target?.closest("[data-action]");
+                    if (!button) return;
+                    const action = button.dataset.action;
+                    const id = button.getAttribute("data-id");
+                    if (action === "view") { openReportDetails(id); return; }
+                    if (action === "edit") { openEditPost(id); return; }
+                    if (action === "approve") { await updateReportStatus(id,"Approved"); return; }
+                    if (action === "reject") await updateReportStatus(id,"Rejected");
+                });
+            }
+
+            function bindEvents() {
+                $$(".nav-link[data-page]").forEach((button) => button.addEventListener("click",() => switchPage(button.dataset.page)));
+                $("#mobileMenuBtn")?.addEventListener("click",() => $("#sidebar")?.classList.toggle("open"));
+                $("#viewAllReportsBtn")?.addEventListener("click",() => switchPage("reports"));
+                $("#refreshReportsBtn")?.addEventListener("click",async (event) => {
+                    event.currentTarget.disabled = true;
+                    try { await loadReports(); } finally { event.currentTarget.disabled = false; }
+                });
+                $("#refreshAdminRequestsBtn")?.addEventListener("click",async (event) => {
+                    event.currentTarget.disabled = true;
+                    try { await loadAdminSignupRequests(); } finally { event.currentTarget.disabled = false; }
+                });
+                $("#reportSearch")?.addEventListener("input",renderReportTables);
+                $("#globalSearch")?.addEventListener("input",() => {
+                    if ($("#reportSearch")) $("#reportSearch").value = $("#globalSearch").value;
+                    switchPage("reports");
+                    renderReportTables();
+                });
+                $("#statusFilter")?.addEventListener("change",renderReportTables);
+                $("#typeFilter")?.addEventListener("change",renderReportTables);
+                $("#adminSignupRequestsBody")?.addEventListener("click",async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    const button = target?.closest("[data-admin-request-action]");
+                    if (!button) return;
+                    const applicantUserId = button.dataset.userId;
+                    if (applicantUserId) await reviewAdminSignupRequest(applicantUserId,button.dataset.adminRequestAction);
+                });
+
+                bindReportActions($("#recentReportsBody"));
+                bindReportActions($("#allReportsBody"));
+                $("#closeReportModal")?.addEventListener("click",closeReportModal);
+                $("#reportModal")?.addEventListener("click",(event) => {
+                    if (event.target === $("#reportModal")) closeReportModal();
+                });
+                $("#editPostForm")?.addEventListener("submit",saveEditPost);
+                $("#cancelEditPostBtn")?.addEventListener("click",closeEditPost);
+                $("#closeEditPostModalBtn")?.addEventListener("click",closeEditPost);
+                $("#editPostModal")?.addEventListener("click",(event) => {
+                    if (event.target === $("#editPostModal")) closeEditPost();
+                });
+
+                document.addEventListener("keydown",(event) => {
+                    if (event.key === "Escape") {
+                        closeReportModal();
+                        closeEditPost();
+                        $("#sidebar")?.classList.remove("open");
+                    }
+                });
+
+                $("#clearLogsBtn")?.addEventListener("click",() => {
+                    if (!activityLogs.length) { showNotice("Walang session logs na kailangang burahin.","info"); return; }
+                    if (window.confirm("Burahin ang activity logs ng kasalukuyang session?")) {
+                        activityLogs = [];
+                        renderActivityLogs();
+                        showNotice("Na-clear ang session activity logs.","success");
+                    }
+                });
+
+                $("#logoutBtn")?.addEventListener("click",async () => {
+                    if (!window.confirm("Sigurado ka bang gusto mong mag-sign out?")) return;
+                    try {
+                        if (adminPresenceChannel) {
+                            await adminPresenceChannel.untrack();
+                            await window.supabaseClient.removeChannel(adminPresenceChannel);
+                            adminPresenceChannel = null;
+                        }
+                        const { error } = await window.supabaseClient.auth.signOut();
+                        if (error) throw error;
+                        window.location.replace("index.html");
+                    } catch (error) {
+                        console.error("Sign out failed:",error);
+                        showNotice("Hindi nakapag-sign out. " + (error.message || "Pakisubukang muli."),"error");
+                    }
+                });
+            }
+
+            async function initializeDashboard() {
+                document.body.style.visibility = "hidden";
+                try {
+                    const authorized = await checkAdminSession();
+                    if (!authorized) return;
+                    bindEvents();
+                    startAdminPresence();
+                    renderActivityLogs();
+                    renderAdminTable();
+                    document.body.style.visibility = "visible";
+                    logActivity("Signed In","Opened the NAGCAlert admin dashboard.");
+                    await loadReports();
+                    await loadAdminSignupRequests();
+                } catch (error) {
+                    console.error("Dashboard initialization failed:",error);
+                    document.body.style.visibility = "visible";
+                    const content = $(".content");
+                    if (content) {
+                        content.innerHTML = `<div class="notice error show"><strong>Dashboard initialization failed.</strong><p style="margin-top:8px;">${escapeHTML(error.message || "Unknown error")}</p><p style="margin-top:8px;">Check your Supabase configuration, admin permissions, and browser Console.</p><button class="btn btn-primary" style="margin-top:14px;" onclick="window.location.href='index.html'">Back to Login</button></div>`;
+                    }
+                }
+            }
+
+            initializeDashboard();
+        })();
+    </script>
+</body>
+</html>
