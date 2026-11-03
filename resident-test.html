@@ -1,0 +1,643 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGCAlert | Resident Testing</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        #incidentMap { height: 380px; max-width: 100%; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .map-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .map-controls input { flex: 1 1 240px; min-width: 0; }
+        #selectedCoordinates { min-height: 1.5em; }
+        @media (max-width: 600px) { #incidentMap { height: 320px; } }
+    </style>
+</head>
+<body>
+
+    <h1>NAGCAlert Resident Testing</h1>
+    <p>Temporary page for testing resident accounts.</p>
+
+    <!-- RESIDENT LOGIN -->
+    <form id="residentLoginForm">
+        <label for="email">Email</label><br>
+        <input
+            type="email"
+            id="email"
+            value="resident.test@nagcalert.local"
+            required
+        >
+
+        <br><br>
+
+        <label for="password">Password</label><br>
+        <input
+            type="password"
+            id="password"
+            placeholder="Enter resident password"
+            required
+        >
+
+        <br><br>
+
+        <button type="submit" id="loginBtn">Login as Resident</button>
+    </form>
+
+    <p id="message"></p>
+
+    <!-- RESIDENT PROFILE -->
+    <div id="residentProfile" style="display: none;">
+        <hr>
+        <h2>Resident Information</h2>
+
+        <p><strong>Full Name:</strong> <span id="residentName"></span></p>
+        <p><strong>Email:</strong> <span id="residentEmail"></span></p>
+        <p><strong>Barangay:</strong> <span id="residentBarangay"></span></p>
+        <p><strong>Contact Number:</strong> <span id="residentContact"></span></p>
+    </div>
+
+    <!-- DISASTER REPORT FORM -->
+    <div id="reportSection" style="display: none;">
+        <hr>
+        <h2>Submit Disaster Report</h2>
+
+        <form id="reportForm">
+            <label for="reportTitle">Report Title</label><br>
+            <input
+                type="text"
+                id="reportTitle"
+                placeholder="Enter report title"
+                required
+            >
+
+            <br><br>
+
+            <label for="disasterType">Disaster Type</label><br>
+            <select id="disasterType" required>
+                <option value="">Select disaster type</option>
+                <option value="Landslides">Landslides</option>
+                <option value="Floods">Floods</option>
+                <option value="Bagyo (Typhoon)">Typhoon</option>
+            </select>
+
+            <br><br>
+
+            <label for="reportBarangay">Select Barangay</label><br>
+            <select id="reportBarangay" required>
+                <option value="">Select Barangay</option>
+                <option value="Abo">Abo</option>
+                <option value="Alibungbungan">Alibungbungan</option>
+                <option value="Alumbrado">Alumbrado</option>
+                <option value="Balayong">Balayong</option>
+                <option value="Balimbing">Balimbing</option>
+                <option value="Balinacon">Balinacon</option>
+                <option value="Bambang">Bambang</option>
+                <option value="Banago">Banago</option>
+                <option value="Banca-banca">Banca-banca</option>
+                <option value="Bangcuro">Bangcuro</option>
+                <option value="Banilad">Banilad</option>
+                <option value="Bayaquitos">Bayaquitos</option>
+                <option value="Buboy">Buboy</option>
+                <option value="Buenavista">Buenavista</option>
+                <option value="Buhanginan">Buhanginan</option>
+                <option value="Bukal">Bukal</option>
+                <option value="Bunga">Bunga</option>
+                <option value="Cabuyew">Cabuyew</option>
+                <option value="Calumpang">Calumpang</option>
+                <option value="Kanluran Kabubuhayan">Kanluran Kabubuhayan</option>
+                <option value="Silangan Kabubuhayan">Silangan Kabubuhayan</option>
+                <option value="Kanluran Lazaan">Kanluran Lazaan</option>
+                <option value="Silangan Lazaan">Silangan Lazaan</option>
+                <option value="Labangan">Labangan</option>
+                <option value="Lagulo">Lagulo</option>
+                <option value="Lawaguin">Lawaguin</option>
+                <option value="Maiit">Maiit</option>
+                <option value="Malaya">Malaya</option>
+                <option value="Malinao">Malinao</option>
+                <option value="Manaol">Manaol</option>
+                <option value="Maravilla">Maravilla</option>
+                <option value="Nagcalbang">Nagcalbang</option>
+                <option value="Oples">Oples</option>
+                <option value="Palayan">Palayan</option>
+                <option value="Palina">Palina</option>
+                <option value="Poblacion I">Poblacion I</option>
+                <option value="Poblacion II">Poblacion II</option>
+                <option value="Poblacion III">Poblacion III</option>
+                <option value="Sabang">Sabang</option>
+                <option value="San Francisco">San Francisco</option>
+                <option value="Santa Lucia">Santa Lucia</option>
+                <option value="Sibulan">Sibulan</option>
+                <option value="Silangan Ilaya">Silangan Ilaya</option>
+                <option value="Silangan Napapatid">Silangan Napapatid</option>
+                <option value="Sinipian">Sinipian</option>
+                <option value="Sulsuguin">Sulsuguin</option>
+                <option value="Talahib">Talahib</option>
+                <option value="Talangan">Talangan</option>
+                <option value="Taytay">Taytay</option>
+                <option value="Tipacan">Tipacan</option>
+                <option value="Wakat">Wakat</option>
+                <option value="Yukos">Yukos</option>
+            </select>
+
+            <br><br>
+
+            <label for="reportLocation">
+                Incident Location / Landmark
+            </label><br>
+
+            <input
+                type="text"
+                id="reportLocation"
+                placeholder="Street, landmark, or incident details"
+                required
+            >
+
+            <br><br>
+
+            <label for="incidentMapSearch">Find a map area</label>
+            <div class="map-controls">
+                <input type="search" id="incidentMapSearch" value="Nagcarlan, Laguna, Philippines" aria-label="Find a map area">
+                <button type="button" id="findIncidentAreaBtn">Find area</button>
+                <button type="button" id="useCurrentLocationBtn">Center on my location</button>
+            </div>
+            <p>Incident area selected: <strong id="selectedBarangayMapLabel">No barangay selected</strong></p>
+            <div id="incidentMap" role="application" aria-label="Choose the incident location on the map"></div>
+            <p id="incidentMapStatus" role="status">Select a barangay to find its mapped area, then click the map to place the incident pin. Map lookup is approximate until verified barangay boundaries are configured.</p>
+            <p id="selectedCoordinates">No incident point selected.</p>
+            <input type="hidden" id="reportLatitude">
+            <input type="hidden" id="reportLongitude">
+
+            <br>
+
+            <label for="reportDescription">Description</label><br>
+            <textarea
+                id="reportDescription"
+                rows="5"
+                placeholder="Describe what happened..."
+                required
+            ></textarea>
+
+            <br><br>
+
+            <button type="submit" id="submitReportBtn">
+                Submit Report
+            </button>
+        </form>
+
+        <p id="reportMessage"></p>
+
+        <!-- MY SUBMITTED REPORTS -->
+        <hr>
+        <div id="myReportsSection">
+            <h2>My Submitted Reports</h2>
+
+            <button type="button" id="refreshReportsBtn">
+                Refresh My Reports
+            </button>
+
+            <div id="myReportsList">
+                <p>Your submitted reports will appear here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPABASE -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+
+    <script>
+        const supabaseClient = window.supabaseClient;
+
+        const loginForm = document.getElementById("residentLoginForm");
+        const message = document.getElementById("message");
+        const reportForm = document.getElementById("reportForm");
+        const reportMessage = document.getElementById("reportMessage");
+        const submitReportBtn = document.getElementById("submitReportBtn");
+        const myReportsList = document.getElementById("myReportsList");
+        let incidentMap = null;
+        let incidentMarker = null;
+        let barangayLookupRequest = 0;
+
+        function setIncidentMapStatus(text) {
+            document.getElementById("incidentMapStatus").textContent = text;
+        }
+
+        function clearIncidentPoint() {
+            document.getElementById("reportLatitude").value = "";
+            document.getElementById("reportLongitude").value = "";
+            document.getElementById("selectedCoordinates").textContent = "No incident point selected.";
+            if (incidentMarker && incidentMap) {
+                incidentMap.removeLayer(incidentMarker);
+                incidentMarker = null;
+            }
+        }
+
+        function setIncidentPoint(latitude, longitude) {
+            const lat = Number(latitude);
+            const lng = Number(longitude);
+            if (!document.getElementById("reportBarangay").value) {
+                setIncidentMapStatus("Select a barangay before choosing an incident point.");
+                return;
+            }
+            if (!Number.isFinite(lat) || !Number.isFinite(lng) ||
+                lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                setIncidentMapStatus("The selected map point is invalid. Please choose another point.");
+                return;
+            }
+
+            document.getElementById("reportLatitude").value = String(lat);
+            document.getElementById("reportLongitude").value = String(lng);
+            document.getElementById("selectedCoordinates").textContent =
+                `Selected incident point in ${document.getElementById("reportBarangay").value}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            setIncidentMapStatus("Incident point selected. You can move the pin by clicking the map.");
+        }
+
+        function validGeocoderResult(result) {
+            const latitude = Number(result.lat);
+            const longitude = Number(result.lon);
+            const displayName = String(result.display_name || "").toLowerCase();
+            return Number.isFinite(latitude) && Number.isFinite(longitude) &&
+                latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180 &&
+                displayName.includes("nagcarlan") && displayName.includes("laguna") &&
+                displayName.includes("philippines");
+        }
+
+        function normalizedPlaceName(value) {
+            return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        }
+
+        async function geocodeNagcarlanPlace(placeName) {
+            const params = new URLSearchParams({
+                q: `${placeName}, Nagcarlan, Laguna, Philippines`,
+                format: "jsonv2",
+                addressdetails: "1",
+                limit: "5"
+            });
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+            if (!response.ok) throw new Error(`Map search failed (${response.status}).`);
+            const results = await response.json();
+            const target = normalizedPlaceName(placeName);
+            return results.find((result) => {
+                const address = Object.values(result.address || {}).join(" ");
+                const searchable = normalizedPlaceName(`${result.display_name || ""} ${address}`);
+                return validGeocoderResult(result) && searchable.includes(target);
+            }) || null;
+        }
+
+        function initializeIncidentMap() {
+            const mapElement = document.getElementById("incidentMap");
+            if (!window.L) {
+                setIncidentMapStatus("The map library could not be loaded. Check your internet connection and try again.");
+                return;
+            }
+            if (incidentMap || !mapElement) return;
+            incidentMap = window.L.map(mapElement);
+            window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(incidentMap);
+
+            incidentMap.on("click", (event) => {
+                const { lat, lng } = event.latlng;
+                if (!incidentMarker) {
+                    incidentMarker = window.L.marker([lat, lng]).addTo(incidentMap);
+                } else {
+                    incidentMarker.setLatLng([lat, lng]);
+                }
+                setIncidentPoint(lat, lng);
+            });
+        }
+
+        async function navigateToSelectedBarangay() {
+            const barangay = document.getElementById("reportBarangay").value;
+            const requestId = ++barangayLookupRequest;
+            clearIncidentPoint();
+            document.getElementById("selectedBarangayMapLabel").textContent = barangay || "No barangay selected";
+            if (!barangay) {
+                setIncidentMapStatus("Select a barangay before placing an incident pin.");
+                return;
+            }
+            if (!incidentMap) initializeIncidentMap();
+            if (!incidentMap) return;
+
+            setIncidentMapStatus(`Finding ${barangay} in Nagcarlan using OpenStreetMap place data...`);
+            try {
+                const result = await geocodeNagcarlanPlace(barangay);
+                if (requestId !== barangayLookupRequest) return;
+                if (!result) {
+                    const townResult = await geocodeNagcarlanPlace("Nagcarlan");
+                    if (requestId !== barangayLookupRequest) return;
+                    if (townResult) {
+                        incidentMap.setView([Number(townResult.lat), Number(townResult.lon)], 12);
+                        window.setTimeout(() => incidentMap.invalidateSize(), 0);
+                    }
+                    setIncidentMapStatus(`No verified OpenStreetMap place result for ${barangay}. The map is centered on Nagcarlan when available; choose the incident point manually and confirm it is inside the selected barangay.`);
+                    return;
+                }
+
+                incidentMap.setView([Number(result.lat), Number(result.lon)], 15);
+                window.setTimeout(() => incidentMap.invalidateSize(), 0);
+                setIncidentMapStatus(`Map centered on the OpenStreetMap place result for ${barangay}. This is not a verified barangay boundary; click the actual incident point and confirm it is inside the selected barangay.`);
+            } catch (error) {
+                if (requestId !== barangayLookupRequest) return;
+                console.error("Finding selected barangay failed:", error);
+                setIncidentMapStatus(`Could not find ${barangay}. Check your connection or select the incident point manually, then verify the barangay.`);
+            }
+        }
+
+        async function findIncidentArea() {
+            const query = document.getElementById("incidentMapSearch").value.trim();
+            if (!query) {
+                setIncidentMapStatus("Enter a place name to find it on the map.");
+                return;
+            }
+            if (!incidentMap) initializeIncidentMap();
+            if (!incidentMap) return;
+
+            setIncidentMapStatus("Finding the requested map area...");
+            try {
+                const result = await geocodeNagcarlanPlace(query);
+                if (!result) {
+                    setIncidentMapStatus("No matching Nagcarlan place was found. Select a barangay or try a more specific name.");
+                    return;
+                }
+                incidentMap.setView([Number(result.lat), Number(result.lon)], 15);
+                window.setTimeout(() => incidentMap.invalidateSize(), 0);
+                setIncidentMapStatus(`Map centered on ${result.display_name}. This is not a verified barangay boundary.`);
+            } catch (error) {
+                console.error("Finding incident map area failed:", error);
+                setIncidentMapStatus("Could not search for that area. Check your connection and try again.");
+            }
+        }
+
+        function useCurrentIncidentLocation() {
+            if (!navigator.geolocation) {
+                setIncidentMapStatus("Your browser does not support location access. Search for a place instead.");
+                return;
+            }
+            if (!incidentMap) initializeIncidentMap();
+            if (!incidentMap) return;
+
+            setIncidentMapStatus("Getting your current location...");
+            navigator.geolocation.getCurrentPosition(
+                ({ coords }) => {
+                    incidentMap.setView([coords.latitude, coords.longitude], 16);
+                    window.setTimeout(() => incidentMap.invalidateSize(), 0);
+                    setIncidentMapStatus("Map centered on your current location. Click the actual incident point to place its pin.");
+                },
+                (error) => {
+                    console.error("Getting resident location failed:", error);
+                    setIncidentMapStatus("Could not access your location. Allow location access or search for an area.");
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        document.getElementById("findIncidentAreaBtn").addEventListener("click", findIncidentArea);
+        document.getElementById("useCurrentLocationBtn").addEventListener("click", useCurrentIncidentLocation);
+        document.getElementById("reportBarangay").addEventListener("change", navigateToSelectedBarangay);
+
+        // RESIDENT LOGIN
+        loginForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const loginBtn = document.getElementById("loginBtn");
+
+            try {
+                loginBtn.disabled = true;
+                message.textContent = "Logging in...";
+
+                if (!supabaseClient) {
+                    throw new Error("Supabase client not found.");
+                }
+
+                const { data, error } =
+                    await supabaseClient.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                if (error) throw error;
+
+                message.textContent = "Login successful! Loading profile...";
+
+                const { data: profile, error: profileError } =
+                    await supabaseClient
+                        .from("resident_profiles")
+                        .select("full_name, barangay, contact_number")
+                        .eq("user_id", data.user.id)
+                        .single();
+
+                if (profileError) throw profileError;
+
+                // DISPLAY PROFILE
+                document.getElementById("residentName").textContent =
+                    profile.full_name || "Not available";
+
+                document.getElementById("residentEmail").textContent =
+                    data.user.email || "Not available";
+
+                document.getElementById("residentBarangay").textContent =
+                    profile.barangay || "Not available";
+
+                document.getElementById("residentContact").textContent =
+                    profile.contact_number || "Not available";
+
+                document.getElementById("residentProfile").style.display = "block";
+                document.getElementById("reportSection").style.display = "block";
+                initializeIncidentMap();
+
+                loginForm.style.display = "none";
+
+                message.textContent = "Resident profile loaded successfully!";
+
+                console.log("Logged-in resident:", data.user);
+
+                // LOAD RESIDENT REPORTS
+                await loadMyReports(data.user.id);
+
+            } catch (error) {
+                console.error("Resident login error:", error);
+                message.textContent = "Login failed: " + error.message;
+
+            } finally {
+                loginBtn.disabled = false;
+            }
+        });
+
+    // LOAD MY SUBMITTED REPORTS
+async function loadMyReports(userId) {
+    myReportsList.textContent = "Loading your reports...";
+
+    try {
+        const { data: reports, error } = await supabaseClient
+            .from("disaster_reports")
+            .select("id, title, disaster_type, barangay, location, latitude, longitude, status, created_at, admin_notes, is_deleted")
+            .eq("reporter_id", userId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        myReportsList.innerHTML = "";
+
+        if (!reports || reports.length === 0) {
+            myReportsList.textContent = "You have no submitted reports yet.";
+            return;
+        }
+
+        reports.forEach(function(report) {
+            const card = document.createElement("div");
+            card.style.border = "1px solid #ccc";
+            card.style.padding = "15px";
+            card.style.margin = "12px 0";
+            card.style.borderRadius = "8px";
+
+            const title = document.createElement("h3");
+            title.textContent = report.title;
+
+            const type = document.createElement("p");
+            type.textContent = "Disaster Type: " + report.disaster_type;
+
+            const location = document.createElement("p");
+            location.textContent = "Location: " + report.location;
+
+            const barangay = document.createElement("p");
+            barangay.textContent = "Barangay: " + (report.barangay || "Not recorded");
+
+            const date = document.createElement("p");
+            date.textContent = "Submitted: " +
+                (report.created_at
+                    ? new Date(report.created_at).toLocaleString()
+                    : "Not available");
+
+            const status = document.createElement("p");
+
+            if (report.is_deleted === true) {
+                status.textContent = "Archived by Admin";
+                status.style.color = "#777";
+            } else {
+                status.textContent = "Status: " + report.status;
+
+                const normalizedStatus = String(report.status || "").toLowerCase();
+
+                if (normalizedStatus === "approved") {
+                    status.style.color = "green";
+                } else if (normalizedStatus === "rejected") {
+                    status.style.color = "red";
+                } else {
+                    status.style.color = "#b8860b";
+                }
+            }
+
+            status.style.fontWeight = "bold";
+
+            card.appendChild(title);
+            card.appendChild(type);
+            card.appendChild(barangay);
+            card.appendChild(location);
+            card.appendChild(date);
+            card.appendChild(status);
+
+            if (report.admin_notes) {
+                const notes = document.createElement("p");
+                notes.textContent = "Admin Notes: " + report.admin_notes;
+                card.appendChild(notes);
+            }
+
+            myReportsList.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Loading resident reports failed:", error);
+        myReportsList.textContent =
+            "Unable to load reports: " + error.message;
+    }
+}
+        // SUBMIT DISASTER REPORT
+        reportForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            try {
+                const barangay = document.getElementById("reportBarangay").value;
+                const latitude = document.getElementById("reportLatitude").value;
+                const longitude = document.getElementById("reportLongitude").value;
+                if (!barangay) {
+                    reportMessage.textContent = "Please select a barangay before submitting.";
+                    return;
+                }
+                if (latitude === "" || longitude === "") {
+                    reportMessage.textContent = "Please select the incident location on the map before submitting.";
+                    return;
+                }
+
+                submitReportBtn.disabled = true;
+                reportMessage.textContent = "Submitting report...";
+
+                const { data: userData, error: userError } =
+                    await supabaseClient.auth.getUser();
+
+                if (userError) throw userError;
+
+                if (!userData.user) {
+                    throw new Error("Please log in again.");
+                }
+
+                const { error: insertError } = await supabaseClient
+                    .from("disaster_reports")
+                    .insert({
+                        reporter_id: userData.user.id,
+                        title: document.getElementById("reportTitle").value.trim(),
+                        disaster_type: document.getElementById("disasterType").value,
+                        barangay,
+                        location: document.getElementById("reportLocation").value.trim(),
+                        latitude: Number(latitude),
+                        longitude: Number(longitude),
+                        description: document.getElementById("reportDescription").value.trim(),
+                        status: "pending"
+                    });
+
+                if (insertError) throw insertError;
+
+                reportMessage.textContent =
+                    "Report submitted successfully! Status: Pending.";
+
+                reportForm.reset();
+                clearIncidentPoint();
+                document.getElementById("selectedBarangayMapLabel").textContent = "No barangay selected";
+                setIncidentMapStatus("Select a barangay to find its mapped area, then click the map to place the incident pin. Map lookup is approximate until verified barangay boundaries are configured.");
+
+                // REFRESH REPORT LIST
+                await loadMyReports(userData.user.id);
+
+            } catch (error) {
+                console.error("Report submission error:", error);
+                reportMessage.textContent =
+                    "Submission failed: " + error.message;
+
+            } finally {
+                submitReportBtn.disabled = false;
+            }
+        });
+
+        // MANUAL REFRESH
+        document.getElementById("refreshReportsBtn")
+            .addEventListener("click", async function() {
+
+                const { data, error } = await supabaseClient.auth.getUser();
+
+                if (error || !data.user) {
+                    myReportsList.textContent = "Please log in again.";
+                    return;
+                }
+
+                await loadMyReports(data.user.id);
+            });
+    </script>
+
+</body>
+</html>
