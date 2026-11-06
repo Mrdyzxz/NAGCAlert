@@ -65,6 +65,8 @@
         .filter-row input,.filter-row select { padding:10px 12px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--text); font-size:12px; outline:none; }
         .filter-row input { flex:1; min-width:160px; }
         .filter-row input:focus,.filter-row select:focus { border-color:var(--gold); }
+        .center-status-select { min-width:155px; padding:9px 10px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--text); font-size:12px; }
+        .center-status-select:focus { border-color:var(--gold); outline:none; }
         .table-wrap { width:100%; overflow-x:auto; }
         table { width:100%; border-collapse:collapse; white-space:nowrap; }
         thead { background:#fafbfc; }
@@ -171,6 +173,7 @@
             <nav class="nav-menu">
                 <button class="nav-link active" data-page="dashboard"><span class="icon">▦</span>Dashboard</button>
                 <button class="nav-link" data-page="reports"><span class="icon">⚠</span>Disaster Reports</button>
+                <button class="nav-link" data-page="evacuation-centers"><span class="icon">⌂</span>Evacuation Centers</button>
                 <button class="nav-link" data-page="map"><span class="icon">⌖</span>Disaster Map</button>
                 <button class="nav-link" data-page="archived">
     <span class="icon">🗃</span>Archived Reports
@@ -283,6 +286,41 @@
                         </div>
                         <p class="map-status" id="disasterMapStatus" role="status">Find an area to center the map. Reports with saved coordinates will appear as markers.</p>
                         <div class="map-frame" id="disasterMapCanvas" role="application" aria-label="Approved disaster report map"></div>
+                    </div>
+                </section>
+
+                <section class="page" id="page-evacuation-centers">
+                    <div class="section-heading">
+                        <h2>Evacuation Centers</h2>
+                        <p>Manage evacuation center availability in Nagcarlan, Laguna.</p>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h2>Center Availability</h2>
+                                <p>Update availability for the six registered evacuation centers.</p>
+                            </div>
+                            <button class="btn btn-outline" id="refreshEvacuationCentersBtn" type="button">↻ Refresh</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Center Name</th>
+                                        <th>Availability</th>
+                                        <th>Last Updated</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="evacuationCentersBody">
+                                    <tr>
+                                        <td colspan="4">
+                                            <div class="empty-state"><span class="loading"></span><br />Loading evacuation centers...</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -449,12 +487,19 @@
             const pageInfo = {
                 dashboard: { title:"Dashboard Overview", subtitle:"Monitor and manage disaster reports in Nagcarlan." },
                 reports: { title:"Disaster Reports", subtitle:"Review, approve, and reject resident submissions." },
+                "evacuation-centers": { title:"Evacuation Centers", subtitle:"Manage evacuation center availability in Nagcarlan, Laguna." },
                 map: { title:"Disaster Map", subtitle:"View approved incident locations in Nagcarlan, Laguna." },
                 archived: { title:"Archived Reports", subtitle:"Review reports archived by administrators." },
                 admins: { title:"Admin Accounts", subtitle:"Manage administrator access information." },
                 logs: { title:"Activity Logs", subtitle:"Review actions performed during this session." },
                 settings: { title:"Settings", subtitle:"System and account information." }
             };
+
+            const evacuationCenterStatuses = [
+                { value:"unconfirmed", label:"Unconfirmed", className:"status-unknown" },
+                { value:"available", label:"Available", className:"status-approved" },
+                { value:"not_available", label:"Not Available", className:"status-rejected" }
+            ];
 
             const barangays = [
                 "Abo", "Alibungbungan", "Alumbrado", "Balayong", "Balimbing", "Balinacon",
@@ -959,6 +1004,111 @@ return true;
     updateStats();
     populateTypeFilter();
 }
+
+            async function loadEvacuationCenters() {
+                const body = $("#evacuationCentersBody");
+                if (!body) return false;
+
+                body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><span class="loading"></span><br />Loading evacuation centers...</div></td></tr>`;
+
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from("evacuation_centers")
+                        .select("id, name, availability_status, updated_at")
+                        .order("id", { ascending:true });
+
+                    if (error) throw error;
+
+                    const centers = Array.isArray(data) ? data : [];
+                    if (!centers.length) {
+                        body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><span class="empty-icon">⌂</span>No evacuation centers found.</div></td></tr>`;
+                        showNotice("No evacuation center records were returned.", "error");
+                        return false;
+                    }
+
+                    body.innerHTML = centers.map((center) => {
+                        const centerId = String(center.id ?? "");
+                        const centerName = String(center.name ?? "Unnamed center");
+                        const currentStatus = String(center.availability_status ?? "");
+                        const statusOption = evacuationCenterStatuses.find((status) => status.value === currentStatus);
+                        const statusOptions = [
+                            ...(!statusOption ? [`<option value="" selected disabled>Unknown status</option>`] : []),
+                            ...evacuationCenterStatuses.map((status) =>
+                                `<option value="${status.value}" ${status.value === currentStatus ? "selected" : ""}>${status.label}</option>`
+                            )
+                        ].join("");
+
+                        return `<tr data-center-id="${escapeHTML(centerId)}">
+                            <td><span class="report-title">${escapeHTML(centerName)}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <span class="status ${statusOption?.className || "status-unknown"}">${escapeHTML(statusOption?.label || "Unknown status")}</span>
+                                    <select class="center-status-select" data-evacuation-center-status aria-label="Availability for ${escapeHTML(centerName)}">
+                                        ${statusOptions}
+                                    </select>
+                                </div>
+                            </td>
+                            <td>${escapeHTML(formatDate(center.updated_at))}</td>
+                            <td><button class="btn btn-primary" type="button" data-evacuation-center-save>Save</button></td>
+                        </tr>`;
+                    }).join("");
+
+                    if (centers.length !== 6) {
+                        showNotice(`Expected six evacuation center records, but ${centers.length} were returned.`, "error");
+                    }
+                    return centers.length === 6;
+                } catch (error) {
+                    console.error("Loading evacuation centers failed:", error);
+                    body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><span class="empty-icon">⚠</span>Unable to load evacuation centers.<br />${escapeHTML(error.message || "Please check Supabase permissions and try again.")}</div></td></tr>`;
+                    showNotice("Unable to load evacuation centers. " + (error.message || "Please check Supabase permissions and try again."), "error");
+                    return false;
+                }
+            }
+
+            async function saveEvacuationCenterStatus(button) {
+                if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+
+                const row = button.closest("tr");
+                const centerId = row?.dataset.centerId;
+                const select = row?.querySelector("[data-evacuation-center-status]");
+                const selectedStatus = select?.value;
+
+                if (!centerId || !evacuationCenterStatuses.some((status) => status.value === selectedStatus)) {
+                    showNotice("Choose a valid availability status for this evacuation center.", "error");
+                    return;
+                }
+
+                button.disabled = true;
+                if (select) select.disabled = true;
+
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from("evacuation_centers")
+                        .update({ availability_status:selectedStatus })
+                        .eq("id", centerId)
+                        .select("id, name, availability_status, updated_at");
+
+                    if (error) throw error;
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error("No evacuation center row was updated. Check the center ID and database permissions.");
+                    }
+
+                    const refreshed = await loadEvacuationCenters();
+                    if (!refreshed) {
+                        showNotice("Availability was saved, but the center list could not be fully refreshed. Use Refresh to verify the latest status.", "error");
+                        return;
+                    }
+
+                    showNotice("Evacuation center availability successfully updated.", "success");
+                } catch (error) {
+                    console.error("Updating evacuation center availability failed:", error);
+                    showNotice("Could not update evacuation center availability. " + (error.message || "Please check your permissions and try again."), "error");
+                } finally {
+                    button.disabled = false;
+                    if (select) select.disabled = false;
+                }
+            }
+
             async function loadArchivedReports() {
                 const body = $("#archivedReportsBody");
                 if (!body) return;
@@ -1785,7 +1935,7 @@ if (!data || data.length === 0) {
                 ["Date Submitted", formatDate(reportDate(report))],
                 ["Status", reportStatus(report)],
                 ["Description", firstValue(reportRecord(report), ["description","details","incident_description","message","report_details"], "No description provided.")],
-                ["Contact", firstValue(reportRecord(report), ["contact_number","phone","phone_number"], "Not provided")],
+                ["Contact Number", firstValue(reportRecord(report), ["contact_number","phone","phone_number"], "Not provided")],
                 ["Barangay", firstValue(reportRecord(report), ["barangay","village"], "Not provided")]
                 
                 ];
@@ -1877,6 +2027,7 @@ if (!data || data.length === 0) {
                 hideNotice();
                 if (pageName === "logs") renderActivityLogs();
                 if (pageName === "reports") renderReportTables();
+                if (pageName === "evacuation-centers") loadEvacuationCenters();
                 if (pageName === "archived") loadArchivedReports();
                 if (pageName === "map") loadApprovedMapReports();
                 if (pageName === "admins") loadAdminSignupRequests();
@@ -1948,6 +2099,17 @@ function bindReportActions(container) {
                 $("#refreshReportsBtn")?.addEventListener("click",async (event) => {
                     event.currentTarget.disabled = true;
                     try { await loadReports(); } finally { event.currentTarget.disabled = false; }
+                });
+                $("#refreshEvacuationCentersBtn")?.addEventListener("click",async (event) => {
+                    const button = event.currentTarget;
+                    button.disabled = true;
+                    try { await loadEvacuationCenters(); } finally { button.disabled = false; }
+                });
+                $("#evacuationCentersBody")?.addEventListener("click",async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    const button = target?.closest("[data-evacuation-center-save]");
+                    if (!button || !event.currentTarget.contains(button)) return;
+                    await saveEvacuationCenterStatus(button);
                 });
                 $("#refreshAdminRequestsBtn")?.addEventListener("click",async (event) => {
                     const button = event.currentTarget;
